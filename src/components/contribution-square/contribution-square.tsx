@@ -1,35 +1,56 @@
 import clsx from "clsx";
-import { Show, createMemo, createSignal, createUniqueId, JSX } from "solid-js";
+import { createMemo, createSignal, createUniqueId } from "solid-js";
+import type { JSX } from "solid-js";
 import styles from "./contribution-square.module.css";
-import type { ContributionSquareProps } from "~/models";
-import { Tooltip } from "~/components";
+import type { ContributionLevel, ContributionSquareProps } from "~/models";
+import { ContributionSquareTooltip } from "~/components";
 
 const LEVELS = ["level0", "level1", "level2", "level3", "level4"] as const;
-const levelIndex = (v: number) =>
-	v <= 0 ? 0 : Math.min(4, (((v - 1) / 10) | 0) + 1);
 
-const fmtWeekday = new Intl.DateTimeFormat("ru-RU", {
-	weekday: "long",
-	timeZone: "UTC",
-});
-const fmtMonth = new Intl.DateTimeFormat("ru-RU", {
-	month: "long",
-	timeZone: "UTC",
-});
-const humanRuDateUTC = (d: Date) =>
-	`${fmtWeekday.format(d)}, ${fmtMonth.format(d)} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+const contributionToLevel = (value: number): ContributionLevel => {
+	if (value <= 0) return 0;
+	const level = (((value - 1) / 10) | 0) + 1;
+	return (level > 4 ? 4 : level) as ContributionLevel;
+};
+
+const buildDefaultTitle = (count: number) =>
+	`${count} contribution${count === 1 ? "" : "s"}`;
 
 export default function ContributionSquare(props: ContributionSquareProps) {
-	const [localSelected, setLocalSelected] = createSignal(false);
+	const tipId = createUniqueId();
+	const [localSelected, setLocalSelected] = createSignal(
+		props.defaultSelected ?? false
+	);
+
+	const contribution = createMemo(() => props.contribution ?? 0);
+
+	const resolvedLevel = createMemo<ContributionLevel>(
+		() => props.lvl ?? contributionToLevel(contribution())
+	);
+
+	const levelClass = createMemo(() => styles[LEVELS[resolvedLevel()]]);
+
+	const fallbackTitle = createMemo(() => buildDefaultTitle(contribution()));
+
+	const tooltipTitle = createMemo<JSX.Element | string>(
+		() => props.titleSlot ?? props.title ?? fallbackTitle()
+	);
+
+	const tooltipDescription = createMemo<JSX.Element | string | undefined>(
+		() => props.descriptionSlot ?? props.description
+	);
+
+	const ariaLabel = createMemo(() => props.ariaLabel ?? fallbackTitle());
 
 	const isSelected = createMemo(() => props.selected ?? localSelected());
-	const count = createMemo(() => props.contribution ?? 0);
-	const lvlClass = createMemo(() => styles[LEVELS[levelIndex(count())]]);
-	const tipId = createUniqueId();
 
-	const toggleSelect = () => {
-		if (props.onSelect) props.onSelect(props.date);
-		else setLocalSelected((v) => !v);
+	const setSelected = (nextSelected: boolean) => {
+		if (props.selected === undefined) setLocalSelected(nextSelected);
+		props.onSelectChange?.({ id: props.id, selected: nextSelected });
+	};
+
+	const toggleSelected = () => {
+		setSelected(!isSelected());
 	};
 
 	const onKeyDown: JSX.EventHandlerUnion<HTMLDivElement, KeyboardEvent> = (
@@ -37,29 +58,28 @@ export default function ContributionSquare(props: ContributionSquareProps) {
 	) => {
 		if (e.key === "Enter" || e.key === " ") {
 			e.preventDefault();
-			toggleSelect();
+			toggleSelected();
 		}
 	};
 
 	return (
 		<div
-			class={clsx(styles.square, lvlClass())}
+			class={clsx(styles.square, levelClass(), props.class)}
 			role="gridcell"
 			tabIndex={0}
+			aria-label={ariaLabel()}
 			aria-selected={isSelected() ? "true" : "false"}
 			aria-describedby={isSelected() ? tipId : undefined}
-			onClick={toggleSelect}
+			onClick={toggleSelected}
 			onKeyDown={onKeyDown}
 		>
-			<Show when={isSelected()}>
-				<Tooltip
-					id={tipId}
-					open
-					title={`${count()} contribution${count() === 1 ? "" : "s"}`}
-					dateTime={props.date.toISOString().slice(0, 10)}
-					dateLabel={humanRuDateUTC(props.date)}
-				/>
-			</Show>
+			<ContributionSquareTooltip
+				id={tipId}
+				open={isSelected()}
+				title={tooltipTitle()}
+				description={tooltipDescription()}
+				lvl={props.lvl}
+			/>
 		</div>
 	);
 }

@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import styles from "./tooltip.module.css";
-import { TooltipProps } from "~/models";
+import type { TooltipProps } from "~/models";
 
 export default function Tooltip(props: TooltipProps) {
 	return (
@@ -11,10 +11,7 @@ export default function Tooltip(props: TooltipProps) {
 			aria-hidden={props.open ? "false" : "true"}
 			data-open={props.open ? "true" : "false"}
 		>
-			<span class={styles.tooltipTitle}>{props.title}</span>
-			<time class={styles.tooltipDate} dateTime={props.dateTime}>
-				{props.dateLabel}
-			</time>
+			{props.children}
 		</div>
 	);
 }

@@ -1,8 +1,13 @@
-export interface TooltipProps {
+import type { JSX } from "solid-js";
+
+export type TooltipBaseProps = {
 	id: string;
 	open: boolean;
-	title: string;
-	dateTime: string;
-	dateLabel: string;
 	class?: string;
-}
+};
+
+export type TooltipContentProps = {
+	children: JSX.Element;
+};
+
+export type TooltipProps = TooltipBaseProps & TooltipContentProps;

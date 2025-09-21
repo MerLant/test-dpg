@@ -1,15 +1,15 @@
-import { For, createSignal, onMount, onCleanup, createMemo } from "solid-js";
+import { For, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import {
 	createFetch,
 	withAbort,
-	withTimeout,
-	withRetry,
 	withCache,
 	withCatchAll,
+	withRetry,
+	withTimeout,
 } from "@solid-primitives/fetch";
 import { ContributionSquare } from "~/components";
 import styles from "./contribution-graph.module.css";
-import type { Cell } from "~/models";
+import type { Cell, SelectChangePayload } from "~/models";
 
 const DAY = 86_400_000;
 const WEEKS = 51;
@@ -29,8 +29,19 @@ const MONTH_LABELS: Record<number, string> = {
 	10: "Нояб.",
 	11: "Дек.",
 };
+
 type MonthSegment = { label: string; start: number; span: number };
 const CELLS = WEEKS * ROWS;
+
+const fmtWeekday = new Intl.DateTimeFormat("ru-RU", {
+	weekday: "long",
+	timeZone: "UTC",
+});
+
+const fmtMonth = new Intl.DateTimeFormat("ru-RU", {
+	month: "long",
+	timeZone: "UTC",
+});
 
 const toUtcMidnight = (d: Date) =>
 	new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -39,6 +50,20 @@ const startOfWeekMondayUTC = (dUTC: Date) => {
 	const dow = dUTC.getUTCDay();
 	const sinceMonday = (dow + 6) % 7;
 	return new Date(dUTC.getTime() - sinceMonday * DAY);
+};
+
+const toIsoDate = (date: Date) => date.toISOString().slice(0, 10);
+
+const humanRuDateUTC = (date: Date) =>
+	`${fmtWeekday.format(date)}, ${fmtMonth.format(date)} ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+
+const toNumericId = (id?: string | number) => {
+	if (typeof id === "number") return id;
+	if (typeof id === "string") {
+		const parsed = Number(id);
+		return Number.isNaN(parsed) ? null : parsed;
+	}
+	return null;
 };
 
 export default function ContributionGraph() {
@@ -71,7 +96,7 @@ export default function ContributionGraph() {
 		for (let i = 0; i < CELLS; i++) {
 			const ts = startTs + i * DAY;
 			const date = new Date(ts);
-			const iso = date.toISOString().slice(0, 10);
+			const iso = toIsoDate(date);
 			out[i] = { ts, date, contribution: data[iso] ?? 0 };
 		}
 		return out;
@@ -89,7 +114,8 @@ export default function ContributionGraph() {
 			for (let row = 0; row < ROWS; row++) {
 				const cell = cells[columnIndex * ROWS + row];
 				if (!cell) break;
-				if (cell.date.getUTCDate() === 1) return cell.date.getUTCMonth();
+				if (cell.date.getUTCDate() === 1)
+					return cell.date.getUTCMonth();
 			}
 			return undefined;
 		};
@@ -128,9 +154,18 @@ export default function ContributionGraph() {
 		return segments.filter((segment) => segment.label && segment.span > 0);
 	});
 
-	const handleSelect = (dt: Date) => {
-		const ts = toUtcMidnight(dt).getTime();
-		setSelectedTs((prev) => (prev === ts ? null : ts));
+	const handleSelectChange = (payload: SelectChangePayload) => {
+		if (payload.selected) {
+			const nextId = toNumericId(payload.id);
+			if (nextId !== null) setSelectedTs(nextId);
+			return;
+		}
+
+		setSelectedTs((prev) => {
+			const id = toNumericId(payload.id);
+			if (id === null) return null;
+			return prev === id ? null : prev;
+		});
 	};
 
 	onMount(() => {
@@ -159,13 +194,17 @@ export default function ContributionGraph() {
 			<div
 				class={styles.monthRow}
 				aria-hidden="true"
-				style={{ "grid-template-columns": `repeat(${WEEKS}, minmax(0, 1fr))` }}
+				style={{
+					"grid-template-columns": `repeat(${WEEKS}, minmax(0, 1fr))`,
+				}}
 			>
 				<For each={monthSegments()}>
 					{(segment) => (
 						<span
 							class={styles.monthLabel}
-							style={{ "grid-column": `${segment.start + 1} / span ${segment.span}` }}
+							style={{
+								"grid-column": `${segment.start + 1} / span ${segment.span}`,
+							}}
 						>
 							{segment.label}
 						</span>
@@ -190,10 +229,11 @@ export default function ContributionGraph() {
 				<For each={items()}>
 					{(it) => (
 						<ContributionSquare
+							id={it.ts}
 							contribution={it.contribution}
-							date={it.date}
+							description={humanRuDateUTC(it.date)}
 							selected={selectedTs() === it.ts}
-							onSelect={handleSelect}
+							onSelectChange={handleSelectChange}
 						/>
 					)}
 				</For>

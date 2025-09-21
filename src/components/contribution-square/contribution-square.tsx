@@ -1,7 +1,8 @@
 import clsx from "clsx";
-import { createSignal, createUniqueId, JSX } from "solid-js";
+import { createMemo, createSignal, createUniqueId, JSX } from "solid-js";
 import styles from "./contribution-square.module.css";
 import type { ContributionSquareProps } from "~/models";
+import { Tooltip } from "~/components";
 
 const LEVELS = ["level0", "level1", "level2", "level3", "level4"] as const;
 const levelIndex = (v: number) =>
@@ -19,12 +20,17 @@ const humanRuDateUTC = (d: Date) =>
 	`${fmtWeekday.format(d)}, ${fmtMonth.format(d)} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 
 export default function ContributionSquare(props: ContributionSquareProps) {
-	const [localSelected, setLocalSelected] = createSignal(false); // для неконтролируемого режима
-	const isSelected = () => props.selected ?? localSelected();
+	const [localSelected, setLocalSelected] = createSignal(false);
 
-	const count = () => props.contribution ?? 0;
-	const lvlClass = () => styles[LEVELS[levelIndex(count())]];
-	const iso = () => props.date.toISOString().slice(0, 10);
+	const isSelected = createMemo(() => props.selected ?? localSelected());
+	const count = createMemo(() => props.contribution ?? 0);
+	const lvlClass = createMemo(() => styles[LEVELS[levelIndex(count())]]);
+	const dateIso = createMemo(() => props.date.toISOString().slice(0, 10));
+	const dateLabel = createMemo(() => humanRuDateUTC(props.date));
+	const title = createMemo(
+		() => `${count()} contribution${count() === 1 ? "" : "s"}`
+	);
+
 	const tipId = createUniqueId();
 
 	const toggleSelect = () => {
@@ -52,19 +58,13 @@ export default function ContributionSquare(props: ContributionSquareProps) {
 			onClick={toggleSelect}
 			onKeyDown={onKeyDown}
 		>
-			<div
+			<Tooltip
 				id={tipId}
-				class={styles.tooltip}
-				role="tooltip"
-				aria-hidden={isSelected() ? "false" : "true"}
-			>
-				<span class={styles.tooltipTitle}>
-					{count()} contribution{count() === 1 ? "" : "s"}
-				</span>
-				<time class={styles.tooltipDate} dateTime={iso()}>
-					{humanRuDateUTC(props.date)}
-				</time>
-			</div>
+				open={isSelected()}
+				title={title()}
+				dateTime={dateIso()}
+				dateLabel={dateLabel()}
+			/>
 		</div>
 	);
 }

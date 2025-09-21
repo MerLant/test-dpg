@@ -15,6 +15,21 @@ const DAY = 86_400_000;
 const WEEKS = 51;
 const ROWS = 7;
 const WEEKDAY_LABELS = ["Пн", "", "Ср", "", "Пт", "", ""];
+const MONTH_LABELS: Record<number, string> = {
+	0: "Янв.",
+	1: "Февр.",
+	2: "Март",
+	3: "Апр.",
+	4: "Май",
+	5: "Июнь",
+	6: "Июль",
+	7: "Авг.",
+	8: "Сент.",
+	9: "Окт.",
+	10: "Нояб.",
+	11: "Дек.",
+};
+type MonthSegment = { label: string; start: number; span: number };
 const CELLS = WEEKS * ROWS;
 
 const toUtcMidnight = (d: Date) =>
@@ -62,6 +77,57 @@ export default function ContributionGraph() {
 		return out;
 	});
 
+	const monthSegments = createMemo<MonthSegment[]>(() => {
+		const cells = items();
+		if (!cells.length) return [];
+
+		const segments: MonthSegment[] = [];
+		let currentMonth = cells[0]?.date?.getUTCMonth() ?? -1;
+		let currentStart = 0;
+
+		const monthStartingInColumn = (columnIndex: number) => {
+			for (let row = 0; row < ROWS; row++) {
+				const cell = cells[columnIndex * ROWS + row];
+				if (!cell) break;
+				if (cell.date.getUTCDate() === 1) return cell.date.getUTCMonth();
+			}
+			return undefined;
+		};
+
+		for (let col = 1; col < WEEKS; col++) {
+			const cell = cells[col * ROWS];
+			if (!cell) break;
+			const nextMonth = monthStartingInColumn(col);
+			if (nextMonth !== undefined) {
+				segments.push({
+					label: MONTH_LABELS[currentMonth] ?? "",
+					start: currentStart,
+					span: Math.max(1, col - currentStart),
+				});
+				currentMonth = nextMonth;
+				currentStart = col;
+			}
+		}
+
+		if (currentMonth !== -1) {
+			segments.push({
+				label: MONTH_LABELS[currentMonth] ?? "",
+				start: currentStart,
+				span: Math.max(1, WEEKS - currentStart),
+			});
+		}
+
+		if (!segments.length) {
+			segments.push({
+				label: MONTH_LABELS[currentMonth] ?? "",
+				start: 0,
+				span: WEEKS,
+			});
+		}
+
+		return segments.filter((segment) => segment.label && segment.span > 0);
+	});
+
 	const handleSelect = (dt: Date) => {
 		const ts = toUtcMidnight(dt).getTime();
 		setSelectedTs((prev) => (prev === ts ? null : ts));
@@ -89,6 +155,23 @@ export default function ContributionGraph() {
 
 	return (
 		<div class={styles.wrapper}>
+			<div class={styles.cornerSpacer} aria-hidden="true" />
+			<div
+				class={styles.monthRow}
+				aria-hidden="true"
+				style={{ "grid-template-columns": `repeat(${WEEKS}, minmax(0, 1fr))` }}
+			>
+				<For each={monthSegments()}>
+					{(segment) => (
+						<span
+							class={styles.monthLabel}
+							style={{ "grid-column": `${segment.start + 1} / span ${segment.span}` }}
+						>
+							{segment.label}
+						</span>
+					)}
+				</For>
+			</div>
 			<div class={styles.weekdayColumn} aria-hidden="true">
 				<For each={WEEKDAY_LABELS}>
 					{(label) => (

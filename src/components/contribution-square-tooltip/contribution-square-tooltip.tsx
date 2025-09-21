@@ -6,36 +6,11 @@ import {
 	Tooltip,
 } from "~/components";
 import { ContributionSquareTooltipProps } from "~/models";
+import { Show } from "solid-js";
 
 export default function ContributionSquareTooltip(
 	props: ContributionSquareTooltipProps
 ) {
-	const title = () => {
-		if (props.title === undefined || props.title === null) return null;
-		if (typeof props.title === "string") {
-			return (
-				<ContributionSquareTitle class={styles.title}>
-					{props.title}
-				</ContributionSquareTitle>
-			);
-		}
-		return props.title;
-	};
-
-	const description = () => {
-		if (props.description === undefined || props.description === null) {
-			return null;
-		}
-		if (typeof props.description === "string") {
-			return (
-				<ContributionSquareDescription class={styles.description}>
-					{props.description}
-				</ContributionSquareDescription>
-			);
-		}
-		return props.description;
-	};
-
 	return (
 		<Tooltip
 			id={props.id}
@@ -43,8 +18,16 @@ export default function ContributionSquareTooltip(
 			class={clsx(styles.tooltip, props.class)}
 		>
 			<div class={styles.content}>
-				{title()}
-				{description()}
+				<Show when={props.title}>
+					<ContributionSquareTitle class={styles.title}>
+						{props.title}
+					</ContributionSquareTitle>
+				</Show>
+				<Show when={props.description}>
+					<ContributionSquareDescription class={styles.description}>
+						{props.description}
+					</ContributionSquareDescription>
+				</Show>
 			</div>
 		</Tooltip>
 	);

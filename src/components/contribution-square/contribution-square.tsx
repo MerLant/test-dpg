@@ -79,6 +79,7 @@ export default function ContributionSquare(props: ContributionSquareProps) {
 				title={tooltipTitle()}
 				description={tooltipDescription()}
 				lvl={props.lvl}
+				class={styles.tooltip}
 			/>
 		</div>
 	);

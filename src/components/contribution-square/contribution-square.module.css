@@ -30,3 +30,7 @@
 .square[aria-selected="true"] {
 	outline-color: var(--contrib-square-outline-selected);
 }
+
+.tooltip {
+	text-transform: capitalize;
+}

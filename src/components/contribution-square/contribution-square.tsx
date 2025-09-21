@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { createMemo, createSignal, createUniqueId, JSX } from "solid-js";
+import { Show, createMemo, createSignal, createUniqueId, JSX } from "solid-js";
 import styles from "./contribution-square.module.css";
 import type { ContributionSquareProps } from "~/models";
 import { Tooltip } from "~/components";
@@ -25,12 +25,6 @@ export default function ContributionSquare(props: ContributionSquareProps) {
 	const isSelected = createMemo(() => props.selected ?? localSelected());
 	const count = createMemo(() => props.contribution ?? 0);
 	const lvlClass = createMemo(() => styles[LEVELS[levelIndex(count())]]);
-	const dateIso = createMemo(() => props.date.toISOString().slice(0, 10));
-	const dateLabel = createMemo(() => humanRuDateUTC(props.date));
-	const title = createMemo(
-		() => `${count()} contribution${count() === 1 ? "" : "s"}`
-	);
-
 	const tipId = createUniqueId();
 
 	const toggleSelect = () => {
@@ -51,20 +45,21 @@ export default function ContributionSquare(props: ContributionSquareProps) {
 		<div
 			class={clsx(styles.square, lvlClass())}
 			role="gridcell"
-			data-level={count()}
 			tabIndex={0}
 			aria-selected={isSelected() ? "true" : "false"}
 			aria-describedby={isSelected() ? tipId : undefined}
 			onClick={toggleSelect}
 			onKeyDown={onKeyDown}
 		>
-			<Tooltip
-				id={tipId}
-				open={isSelected()}
-				title={title()}
-				dateTime={dateIso()}
-				dateLabel={dateLabel()}
-			/>
+			<Show when={isSelected()}>
+				<Tooltip
+					id={tipId}
+					open
+					title={`${count()} contribution${count() === 1 ? "" : "s"}`}
+					dateTime={props.date.toISOString().slice(0, 10)}
+					dateLabel={humanRuDateUTC(props.date)}
+				/>
+			</Show>
 		</div>
 	);
 }

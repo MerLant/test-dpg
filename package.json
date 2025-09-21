@@ -1,0 +1,29 @@
+{
+	"name": "example-basic",
+	"type": "module",
+	"scripts": {
+		"dev": "vinxi dev",
+		"build": "vinxi build",
+		"start": "vinxi start",
+		"lint": "eslint ./src --ext .ts,.tsx,.js,.jsx",
+		"format": "prettier --write ./src ./public",
+		"format:check": "prettier --check ./src",
+		"version": "vinxi version"
+	},
+	"dependencies": {
+		"@eslint/js": "^9.35.0",
+		"@prettier/plugin-xml": "^3.4.2",
+		"@solidjs/meta": "^0.29.4",
+		"@solidjs/router": "^0.15.0",
+		"@solidjs/start": "^1.1.0",
+		"eslint": "^9.35.0",
+		"eslint-plugin-solid": "^0.14.5",
+		"prettier": "3.6.2",
+		"solid-js": "^1.9.5",
+		"typescript-eslint": "^8.44.0",
+		"vinxi": "^0.5.7"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}

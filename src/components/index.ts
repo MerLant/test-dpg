@@ -4,3 +4,4 @@ export * from "./tooltip";
 export * from "./contribution-square-tooltip";
 export * from "./contribution-square-title";
 export * from "./contribution-square-description";
+export * from "./contribution-tutorial";

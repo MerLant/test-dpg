@@ -1,0 +1,14 @@
+.wrapper {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-end;
+	color: var(--contrib-graph-label-color);
+	font-size: 8px;
+	gap: 6px;
+}
+
+.squares {
+	display: flex;
+	flex-direction: row;
+	gap: var(--contrib-graph-grid-gap);
+}

@@ -9,10 +9,10 @@
 	--contrib-square-outline-hover: rgba(0, 0, 0, 0.5);
 	--contrib-square-outline-selected: #000000;
 
-	--contrib-graph-column-gap: 8px;
-	--contrib-graph-row-gap: 6px;
+	--contrib-graph-column-gap: 5px;
+	--contrib-graph-row-gap: 5px;
 	--contrib-graph-label-gap: 2px;
-	--contrib-graph-label-font-size: 10px;
+	--contrib-graph-label-font-size: 12px;
 	--contrib-graph-label-color: #959494;
 	--contrib-graph-weekday-height: 15px;
 	--contrib-graph-weekday-gap: 2px;

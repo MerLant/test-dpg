@@ -1,5 +1,5 @@
 import { Title } from "@solidjs/meta";
-import { ContributionGraph } from "~/components";
+import { ContributionGraph, ContributionTutorial } from "~/components";
 
 export default function Home() {
 	return (
@@ -7,6 +7,7 @@ export default function Home() {
 			<Title>Hello World</Title>
 			<h1>Hello world!</h1>
 			<ContributionGraph />
+			<ContributionTutorial />
 		</main>
 	);
 }

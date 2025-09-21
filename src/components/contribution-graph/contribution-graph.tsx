@@ -1,11 +1,20 @@
 import { For, createSignal, onMount, onCleanup, createMemo } from "solid-js";
-import { ContributionSquare } from "../contribution-square";
+import {
+	createFetch,
+	withAbort,
+	withTimeout,
+	withRetry,
+	withCache,
+	withCatchAll,
+} from "@solid-primitives/fetch";
+import { ContributionSquare } from "~/components";
 import styles from "./contribution-graph.module.css";
-import { Cell } from "~/models";
+import type { Cell } from "~/models";
 
 const DAY = 86_400_000;
 const WEEKS = 51;
 const ROWS = 7;
+const CELLS = WEEKS * ROWS;
 
 const toUtcMidnight = (d: Date) =>
 	new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
@@ -18,17 +27,36 @@ const startOfWeekMondayUTC = (dUTC: Date) => {
 
 export default function ContributionGraph() {
 	const [selectedTs, setSelectedTs] = createSignal<number | null>(null);
+
+	const fetchCache: Record<string, unknown> = {};
+
+	const [contribs] = createFetch<Record<string, number>>(
+		"https://dpg.gg/test/calendar.json",
+		undefined,
+		{ initialValue: {} as Record<string, number> },
+		[
+			withAbort(),
+			withTimeout(8000),
+			withRetry(2, (retry: number) => 500 * 2 ** (retry - 1)),
+			withCache({ cache: fetchCache, expires: 1000 * 60 * 60 }),
+			withCatchAll(),
+		]
+	);
+
 	let rootEl!: HTMLDivElement;
 
 	const items = createMemo<Cell[]>(() => {
 		const todayUTC = toUtcMidnight(new Date());
 		const thisWeekMon = startOfWeekMondayUTC(todayUTC);
 		const startTs = thisWeekMon.getTime() - (WEEKS - 1) * ROWS * DAY;
+		const data = contribs() || {};
 
-		const out: Cell[] = new Array(WEEKS * ROWS);
-		for (let i = 0; i < out.length; i++) {
+		const out: Cell[] = new Array(CELLS);
+		for (let i = 0; i < CELLS; i++) {
 			const ts = startTs + i * DAY;
-			out[i] = { ts, date: new Date(ts), contribution: 0 };
+			const date = new Date(ts);
+			const iso = date.toISOString().slice(0, 10);
+			out[i] = { ts, date, contribution: data[iso] ?? 0 };
 		}
 		return out;
 	});
@@ -52,7 +80,6 @@ export default function ContributionGraph() {
 
 		document.addEventListener("pointerdown", onDocPointerDown, true);
 		document.addEventListener("keydown", onDocKeyDown);
-
 		onCleanup(() => {
 			document.removeEventListener("pointerdown", onDocPointerDown, true);
 			document.removeEventListener("keydown", onDocKeyDown);
@@ -66,6 +93,7 @@ export default function ContributionGraph() {
 			role="grid"
 			aria-rowcount={ROWS}
 			aria-colcount={WEEKS}
+			aria-label="График контрибуций за 51 неделю"
 		>
 			<For each={items()}>
 				{(it) => (

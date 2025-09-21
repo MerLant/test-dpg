@@ -1,5 +1,7 @@
 .root {
 	display: grid;
+	grid-auto-flow: column;
+	grid-template-rows: repeat(7, min-content);
 	justify-content: center;
 	align-content: center;
 	gap: 2px;

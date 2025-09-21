@@ -1,37 +1,52 @@
-import { For, createSignal, onMount, onCleanup } from "solid-js";
+import { For, createSignal, onMount, onCleanup, createMemo } from "solid-js";
 import { ContributionSquare } from "../contribution-square";
 import styles from "./contribution-graph.module.css";
+import { Cell } from "~/models";
+
+const DAY = 86_400_000;
+const WEEKS = 51;
+const ROWS = 7;
+
+const toUtcMidnight = (d: Date) =>
+	new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+
+const startOfWeekMondayUTC = (dUTC: Date) => {
+	const dow = dUTC.getUTCDay();
+	const sinceMonday = (dow + 6) % 7;
+	return new Date(dUTC.getTime() - sinceMonday * DAY);
+};
 
 export default function ContributionGraph() {
-	const [selectedIso, setSelectedIso] = createSignal<string | null>(null);
-	let rootEl: HTMLDivElement | undefined;
+	const [selectedTs, setSelectedTs] = createSignal<number | null>(null);
+	let rootEl!: HTMLDivElement;
 
-	const iso = (d: Date) => d.toISOString().slice(0, 10);
-	const addDays = (d: Date, n: number) =>
-		new Date(d.getTime() + n * 86400000);
+	const items = createMemo<Cell[]>(() => {
+		const todayUTC = toUtcMidnight(new Date());
+		const thisWeekMon = startOfWeekMondayUTC(todayUTC);
+		const startTs = thisWeekMon.getTime() - (WEEKS - 1) * ROWS * DAY;
 
-	const base = new Date("2002-10-10T00:00:00Z");
-	const items = [0, 1, 10, 20, 30].map((c, i) => ({
-		contribution: c,
-		date: addDays(base, i),
-	}));
+		const out: Cell[] = new Array(WEEKS * ROWS);
+		for (let i = 0; i < out.length; i++) {
+			const ts = startTs + i * DAY;
+			out[i] = { ts, date: new Date(ts), contribution: 0 };
+		}
+		return out;
+	});
 
 	const handleSelect = (dt: Date) => {
-		const key = iso(dt);
-		setSelectedIso((prev) => (prev === key ? null : key));
+		const ts = toUtcMidnight(dt).getTime();
+		setSelectedTs((prev) => (prev === ts ? null : ts));
 	};
 
 	onMount(() => {
 		const onDocPointerDown = (e: PointerEvent) => {
-			if (!rootEl || !selectedIso()) return;
+			if (!selectedTs()) return;
 			const target = e.target as Node | null;
-			if (target && !rootEl.contains(target)) setSelectedIso(null);
+			if (target && !rootEl.contains(target)) setSelectedTs(null);
 		};
-
 		const onDocKeyDown = (e: KeyboardEvent) => {
-			if (e.defaultPrevented) return;
-			if (e.key === "Escape" && selectedIso()) {
-				setSelectedIso(null);
+			if (!e.defaultPrevented && e.key === "Escape" && selectedTs()) {
+				setSelectedTs(null);
 			}
 		};
 
@@ -45,13 +60,19 @@ export default function ContributionGraph() {
 	});
 
 	return (
-		<div ref={rootEl} class={styles.root}>
-			<For each={items}>
+		<div
+			ref={rootEl}
+			class={styles.root}
+			role="grid"
+			aria-rowcount={ROWS}
+			aria-colcount={WEEKS}
+		>
+			<For each={items()}>
 				{(it) => (
 					<ContributionSquare
 						contribution={it.contribution}
 						date={it.date}
-						selected={selectedIso() === iso(it.date)}
+						selected={selectedTs() === it.ts}
 						onSelect={handleSelect}
 					/>
 				)}

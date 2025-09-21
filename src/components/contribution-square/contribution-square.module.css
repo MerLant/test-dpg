@@ -3,3 +3,19 @@
 	height: 15px;
 	background-color: #ededed;
 }
+
+.level0 {
+	background-color: #ededed;
+}
+.level1 {
+	background-color: #acd5f2;
+}
+.level2 {
+	background-color: #7fa8c9;
+}
+.level3 {
+	background-color: #527ba0;
+}
+.level4 {
+	background-color: #254e77;
+}

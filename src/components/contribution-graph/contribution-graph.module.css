@@ -1,5 +1,4 @@
-.square {
-	width: 15px;
-	height: 15px;
-	background-color: #ededed;
+.root {
+	display: grid;
+	gap: 2px;
 }

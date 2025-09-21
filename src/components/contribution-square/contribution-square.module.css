@@ -1,32 +1,32 @@
 .square {
 	position: relative;
-	width: 15px;
-	height: 15px;
-	background-color: #ededed;
-	outline: 1px solid transparent;
+	width: var(--contrib-square-size);
+	height: var(--contrib-square-size);
+	background-color: var(--contrib-square-color-base);
+	outline: var(--contrib-square-outline-width) solid transparent;
 }
 
 .square:hover,
 .square:focus-visible {
-	outline-color: rgba(0, 0, 0, 0.5);
+	outline-color: var(--contrib-square-outline-hover);
 }
 
 .level0 {
-	background-color: #ededed;
+	background-color: var(--contrib-square-color-base);
 }
 .level1 {
-	background-color: #acd5f2;
+	background-color: var(--contrib-square-color-level-1);
 }
 .level2 {
-	background-color: #7fa8c9;
+	background-color: var(--contrib-square-color-level-2);
 }
 .level3 {
-	background-color: #527ba0;
+	background-color: var(--contrib-square-color-level-3);
 }
 .level4 {
-	background-color: #254e77;
+	background-color: var(--contrib-square-color-level-4);
 }
 
 .square[aria-selected="true"] {
-	outline-color: #000000;
+	outline-color: var(--contrib-square-outline-selected);
 }

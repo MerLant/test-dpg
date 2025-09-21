@@ -1,7 +1,28 @@
+:root {
+	--contrib-square-size: 15px;
+	--contrib-square-outline-width: 1px;
+	--contrib-square-color-base: #ededed;
+	--contrib-square-color-level-1: #acd5f2;
+	--contrib-square-color-level-2: #7fa8c9;
+	--contrib-square-color-level-3: #527ba0;
+	--contrib-square-color-level-4: #254e77;
+	--contrib-square-outline-hover: rgba(0, 0, 0, 0.5);
+	--contrib-square-outline-selected: #000000;
+
+	--contrib-graph-column-gap: 8px;
+	--contrib-graph-row-gap: 6px;
+	--contrib-graph-label-gap: 2px;
+	--contrib-graph-label-font-size: 10px;
+	--contrib-graph-label-color: #959494;
+	--contrib-graph-weekday-height: 15px;
+	--contrib-graph-weekday-gap: 2px;
+	--contrib-graph-grid-gap: 2px;
+
+	--font-family: "Inter", sans-serif;
+}
+
 body {
-	font-family:
-		Gordita, Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-		"Helvetica Neue", sans-serif;
+	font-family: var(--font-family);
 }
 
 a {

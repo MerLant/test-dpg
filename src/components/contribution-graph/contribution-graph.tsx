@@ -14,6 +14,7 @@ import type { Cell } from "~/models";
 const DAY = 86_400_000;
 const WEEKS = 51;
 const ROWS = 7;
+const WEEKDAY_LABELS = ["Пн", "", "Ср", "", "Пт", "", ""];
 const CELLS = WEEKS * ROWS;
 
 const toUtcMidnight = (d: Date) =>
@@ -87,24 +88,33 @@ export default function ContributionGraph() {
 	});
 
 	return (
-		<div
-			ref={rootEl}
-			class={styles.root}
-			role="grid"
-			aria-rowcount={ROWS}
-			aria-colcount={WEEKS}
-			aria-label="График контрибуций за 51 неделю"
-		>
-			<For each={items()}>
-				{(it) => (
-					<ContributionSquare
-						contribution={it.contribution}
-						date={it.date}
-						selected={selectedTs() === it.ts}
-						onSelect={handleSelect}
-					/>
-				)}
-			</For>
+		<div class={styles.wrapper}>
+			<div class={styles.weekdayColumn} aria-hidden="true">
+				<For each={WEEKDAY_LABELS}>
+					{(label) => (
+						<span class={styles.weekdayLabel}>{label}</span>
+					)}
+				</For>
+			</div>
+			<div
+				ref={rootEl}
+				class={styles.root}
+				role="grid"
+				aria-rowcount={ROWS}
+				aria-colcount={WEEKS}
+				aria-label="График контрибуций за 51 неделю"
+			>
+				<For each={items()}>
+					{(it) => (
+						<ContributionSquare
+							contribution={it.contribution}
+							date={it.date}
+							selected={selectedTs() === it.ts}
+							onSelect={handleSelect}
+						/>
+					)}
+				</For>
+			</div>
 		</div>
 	);
 }
